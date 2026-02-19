@@ -8,8 +8,6 @@ import { keystore } from './keystore';
 const REMOTE_UI_URL = 'https://digiloglabs.com/agi';
 const LOGIN_URL =
   'https://digiloglabs.com/auth/signin?redirect=electron&callback=digiloglabs-agents://auth';
-const LOGIN_URL =
-  'https://digiloglabs.com/auth/signin?redirect=electron&callback=digiloglabs-agents://auth';
 
 let mainWindow: BrowserWindow | null = null;
 

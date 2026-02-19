@@ -30,24 +30,38 @@
       "buildResources": "resources",
       "output": "dist"
     },
-    "files": ["electron/dist/**", "fallback/**", "resources/**"],
+    "files": [
+      "electron/dist/**",
+      "fallback/**",
+      "resources/**"
+    ],
     "mac": {
       "category": "public.app-category.productivity",
-      "target": ["dmg", "zip"]
+      "target": [
+        "zip"
+      ]
     },
     "win": {
-      "target": ["portable"],
-      "signAndEditExecutable": true
+      "target": [
+        "portable"
+      ],
+      "signAndEditExecutable": false
     },
     "linux": {
-      "target": ["deb", "AppImage"]
+      "target": [
+        "AppImage"
+      ]
     },
     "publish": {
       "provider": "github"
     },
     "protocols": {
       "name": "digiloglabs-agents",
-      "schemes": ["digiloglabs-agents"]
+      "schemes": [
+        "digiloglabs-agents"
+      ]
     }
-  }
+  },
+  "description": "DigiLog Labs Agents desktop app",
+  "author": "DigiLog Labs Inc. <contact@digiloglabs.com>"
 }

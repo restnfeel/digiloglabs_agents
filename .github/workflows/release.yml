@@ -66,14 +66,17 @@ jobs:
 
       - name: Merge artifacts
         run: |
-          mkdir -p dist
-          find artifacts -type f -exec cp {} dist/ \;
+          mkdir -p release
+          for dir in artifacts/dist-*; do
+            find "$dir" -maxdepth 1 -type f -exec cp {} release/ \;
+          done
+          ls -la release/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag_name || github.ref_name }}
-          files: dist/*
+          files: release/*
           draft: false
           generate_release_notes: true
         env:

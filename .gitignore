@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-win/
+electron/dist/
+
+# Lock files (use yarn.lock or package-lock.json as needed, exclude package-lock per user request)
+package-lock.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Signing (keep env.signing.example)
+*.pfx

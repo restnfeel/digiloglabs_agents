@@ -3,6 +3,15 @@ import { keystore } from './keystore';
 import { registerFsHandlers } from './localfs';
 
 let mainWindowRef: BrowserWindow | null = null;
+let loginWindowRef: BrowserWindow | null = null;
+
+export function getLoginWindowRef(): BrowserWindow | null {
+  return loginWindowRef;
+}
+
+export function setLoginWindowRef(win: BrowserWindow | null): void {
+  loginWindowRef = win;
+}
 
 export function registerIpcHandlers(mainWindow: BrowserWindow | null): void {
   mainWindowRef = mainWindow;
@@ -33,6 +42,8 @@ export function registerIpcHandlers(mainWindow: BrowserWindow | null): void {
       parent: win ?? undefined,
       webPreferences: { nodeIntegration: false },
     });
+    setLoginWindowRef(loginWin);
+    loginWin.on('closed', () => setLoginWindowRef(null));
     loginWin.loadURL(
       'https://digiloglabs.com/auth/signin?redirect=electron&callback=digiloglabs-agents://auth'
     );

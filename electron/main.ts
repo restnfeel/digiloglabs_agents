@@ -1,7 +1,11 @@
 import { app, BrowserWindow, net } from 'electron';
 import path from 'path';
 import { createTray } from './tray';
-import { registerIpcHandlers } from './ipc-handlers';
+import {
+  registerIpcHandlers,
+  getLoginWindowRef,
+  setLoginWindowRef,
+} from './ipc-handlers';
 import { setupAutoUpdater } from './updater';
 import { keystore } from './keystore';
 
@@ -22,6 +26,8 @@ function handleAuthCallback(url: string): void {
     if (token) {
       keystore.setDigilogToken(token);
       mainWindow?.webContents.send('auth:token-received', token);
+      getLoginWindowRef()?.close();
+      setLoginWindowRef(null);
     }
   } catch {
     /* ignore */

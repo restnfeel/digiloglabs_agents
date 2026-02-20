@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 dist/
+resources/icon-512.png
 dist-win/
 electron/dist/
 

@@ -1,11 +1,12 @@
 /**
- * Create 512x512 icon for macOS build (electron-builder requirement)
- * Output: resources/icon-512.png
+ * Ensure icon.png is 512x512 for macOS build (electron-builder requirement)
+ * Overwrites icon.png in place if resizing needed
  */
 const path = require('path');
+const fs = require('fs');
 
 const iconPath = path.join(__dirname, '../resources/icon.png');
-const outPath = path.join(__dirname, '../resources/icon-512.png');
+const tmpPath = path.join(__dirname, '../resources/icon.png.tmp');
 const sharp = require('sharp');
 
 async function resize() {
@@ -13,14 +14,14 @@ async function resize() {
   const { width, height } = metadata;
 
   if (width >= 512 && height >= 512) {
-    console.log(`Icon already ${width}x${height}, copying to icon-512.png`);
-    await sharp(iconPath).toFile(outPath);
+    console.log(`Icon already ${width}x${height}, skipping`);
     return;
   }
 
   console.log(`Resizing icon from ${width}x${height} to 512x512`);
-  await sharp(iconPath).resize(512, 512).toFile(outPath);
-  console.log('icon-512.png created');
+  await sharp(iconPath).resize(512, 512).toFile(tmpPath);
+  fs.renameSync(tmpPath, iconPath);
+  console.log('icon.png updated');
 }
 
 resize().catch((err) => {

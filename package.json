@@ -39,7 +39,6 @@
     ],
     "mac": {
       "category": "public.app-category.productivity",
-      "icon": "resources/icon-512.png",
       "target": [
         "zip"
       ]

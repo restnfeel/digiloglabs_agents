@@ -41,6 +41,9 @@ jobs:
       - name: Build Electron
         run: npm run build:electron
 
+      - name: Resize icon (required for macOS)
+        run: npm run resize-icon
+
       - name: Build with electron-builder
         run: npx electron-builder --${{ matrix.platform }} --publish never
         env:

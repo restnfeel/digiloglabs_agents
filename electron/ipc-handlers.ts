@@ -13,7 +13,12 @@ export function setLoginWindowRef(win: BrowserWindow | null): void {
   loginWindowRef = win;
 }
 
-export function registerIpcHandlers(mainWindow: BrowserWindow | null): void {
+type AuthCallback = (url: string) => void;
+
+export function registerIpcHandlers(
+  mainWindow: BrowserWindow | null,
+  handleAuthCallback?: AuthCallback
+): void {
   mainWindowRef = mainWindow;
   registerFsHandlers();
 
@@ -40,12 +45,42 @@ export function registerIpcHandlers(mainWindow: BrowserWindow | null): void {
       height: 680,
       modal: !!win,
       parent: win ?? undefined,
-      webPreferences: { nodeIntegration: false },
+      webPreferences: {
+        nodeIntegration: false,
+      },
     });
     setLoginWindowRef(loginWin);
     loginWin.on('closed', () => setLoginWindowRef(null));
+
+    if (handleAuthCallback) {
+      loginWin.webContents.setWindowOpenHandler(({ url }) => {
+        console.log('[auth:login-window] window.open:', url);
+        if (url.startsWith('digiloglabs-agents://')) {
+          handleAuthCallback(url);
+          setLoginWindowRef(null);
+          loginWin.close();
+          return { action: 'deny' };
+        }
+        return { action: 'allow' };
+      });
+      loginWin.webContents.on('will-navigate', (event, url) => {
+        console.log('[auth:login-window] will-navigate:', url);
+        if (url.startsWith('digiloglabs-agents://')) {
+          event.preventDefault();
+          handleAuthCallback(url);
+        }
+      });
+      loginWin.webContents.on('will-redirect', (event, url) => {
+        console.log('[auth:login-window] will-redirect:', url);
+        if (url.startsWith('digiloglabs-agents://')) {
+          event.preventDefault();
+          handleAuthCallback(url);
+        }
+      });
+    }
+
     loginWin.loadURL(
-      'https://digiloglabs.com/auth/signin?redirect=electron&callback=digiloglabs-agents://auth'
+      'https://www.digiloglabs.com/auth/signin?redirect=electron&callback=digiloglabs-agents://auth'
     );
   });
 

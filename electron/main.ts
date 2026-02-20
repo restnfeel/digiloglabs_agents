@@ -1,4 +1,4 @@
-import { app, BrowserWindow, net } from 'electron';
+import { app, BrowserWindow, net, protocol, session } from 'electron';
 import path from 'path';
 import { createTray } from './tray';
 import {
@@ -11,15 +11,25 @@ import { keystore } from './keystore';
 
 const REMOTE_UI_URL = 'https://digiloglabs.com/agi';
 const LOGIN_URL =
-  'https://digiloglabs.com/auth/signin?redirect=electron&callback=digiloglabs-agents://auth';
+  'https://www.digiloglabs.com/auth/signin?redirect=electron&callback=digiloglabs-agents://auth';
 
 let mainWindow: BrowserWindow | null = null;
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'digiloglabs-agents',
+    privileges: { standard: true, secure: true },
+  },
+]);
 
 if (!app.isDefaultProtocolClient('digiloglabs-agents')) {
   app.setAsDefaultProtocolClient('digiloglabs-agents');
 }
 
 function handleAuthCallback(url: string): void {
+  if (!app.isPackaged) {
+    console.log('[auth] handleAuthCallback received:', url.slice(0, 80) + '...');
+  }
   try {
     const parsed = new URL(url);
     const token = parsed.searchParams.get('token');
@@ -28,10 +38,32 @@ function handleAuthCallback(url: string): void {
       mainWindow?.webContents.send('auth:token-received', token);
       getLoginWindowRef()?.close();
       setLoginWindowRef(null);
+      if (!app.isPackaged) {
+        console.log('[auth] Token saved, login window closed');
+      }
     }
   } catch {
     /* ignore */
   }
+}
+
+function setupAuthNavigationListeners(): void {
+  app.on('web-contents-created', (_e, contents) => {
+    const tryHandleAuth = (url: string) => {
+      if (url.startsWith('digiloglabs-agents://')) {
+        handleAuthCallback(url);
+        return true;
+      }
+      return false;
+    };
+
+    contents.on('will-navigate', (event, url) => {
+      if (tryHandleAuth(url)) event.preventDefault();
+    });
+    contents.on('will-redirect', (event, url) => {
+      if (tryHandleAuth(url)) event.preventDefault();
+    });
+  });
 }
 
 const gotTheLock = app.requestSingleInstanceLock();
@@ -90,6 +122,9 @@ async function createWindow(): Promise<void> {
     if (!online) {
       mainWindow?.webContents.send('app:offline-mode', true);
     }
+    if (!app.isPackaged) {
+      mainWindow?.webContents.openDevTools();
+    }
   });
 
   mainWindow.webContents.on('did-fail-load', () => {
@@ -98,8 +133,25 @@ async function createWindow(): Promise<void> {
 }
 
 app.whenReady().then(async () => {
+  setupAuthNavigationListeners();
+
+  const argvUrl = process.argv.find(arg => arg.startsWith('digiloglabs-agents://'));
+  if (argvUrl) handleAuthCallback(argvUrl);
+
+  const protocolHandler = (request: { url: string }) => {
+    handleAuthCallback(request.url);
+    return new Response(
+      '<!DOCTYPE html><html><body><h2>로그인 완료. 이 창을 닫아주세요.</h2></body></html>',
+      {
+        headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      }
+    );
+  };
+
+  session.defaultSession.protocol.handle('digiloglabs-agents', protocolHandler);
+
   await createWindow();
-  registerIpcHandlers(mainWindow);
+  registerIpcHandlers(mainWindow, handleAuthCallback);
   if (mainWindow) {
     createTray(mainWindow);
     setupAutoUpdater(mainWindow);

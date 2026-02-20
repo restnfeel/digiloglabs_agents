@@ -25,15 +25,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     openLoginWindow: () => ipcRenderer.invoke('auth:open-login'),
     getToken: () => ipcRenderer.invoke('auth:get-token'),
     logout: () => ipcRenderer.invoke('auth:logout'),
-    onAuthTokenReceived: (callback: (token: string) => void) => {
-      ipcRenderer.on('auth:token-received', (_event, token: string) =>
-        callback(token)
-      );
-    },
   },
   app: {
     version: () => ipcRenderer.invoke('app:version'),
     checkUpdate: () => ipcRenderer.invoke('app:check-update'),
   },
   platform: process.platform,
+  onAuthTokenReceived: (callback: (token: string) => void) => {
+    ipcRenderer.on('auth:token-received', (_event, token: string) =>
+      callback(token)
+    );
+  },
 });
